@@ -1,15 +1,17 @@
+#ifndef TEAMOPTIMIZER_H
+#define TEAMOPTIMIZER_H
+
 #include <string>
-#include <vector>
+#include <map>
 
 #include "project.h"
 
-// I have realized later that this could probably just be a struct...
 struct Candidate {
   public:
-    std::string name;
     int years_programming;
     int years_designing;
     int years_leading;
+    char appointed_role;
 };
 
 class TeamOptimizer : Project
@@ -19,8 +21,14 @@ class TeamOptimizer : Project
     void run() override;
     
     void add_candidate();
+    void set_candidate_info(std::string candidate_name, Candidate &candidate);
     void list_candidates();
+    void select_candidates(const char &input_mode);
+    Candidate& get_candidate();
     void view_candidates();
   private:
-    std::vector<Candidate> candidate_list;
+    // key is name
+    std::map<std::string, Candidate> candidate_list;
 };
+
+#endif // TEAMOPTIMIZER_H
