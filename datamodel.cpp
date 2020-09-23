@@ -19,13 +19,13 @@ static void print_all_devices(std::vector<UsbDevice> &dev_list)
 void DataModel::sort_usb_devices(std::vector<UsbDevice> &dev_list)
 {
     std::sort(std::begin(dev_list), std::end(dev_list), [](UsbDevice dev0, UsbDevice dev1){
-        return dev0.size_in_megabytes < dev1.size_in_megabytes;
+        return dev0.get_size_in_megabytes() < dev1.get_size_in_megabytes();
     });
 }
 
 void DataModel::run()
 {
-    usb_devices.push_back({
+    UsbDevice drive0(
         "Cruzer",
         "Sandisk",
         "",
@@ -33,9 +33,10 @@ void DataModel::run()
         2.0f,
         58704,
         true
-    });
+    );
+    usb_devices.push_back(drive0);
 
-    usb_devices.push_back({
+    UsbDevice drive1{
         "",
         "Micro Center",
         "Toshiba MLC",
@@ -43,9 +44,10 @@ void DataModel::run()
         3.0f,
         15112,
         true
-    });
+    };
+    usb_devices.push_back(drive1);
 
-    usb_devices.push_back({
+    UsbDevice drive2{
         "",
         "Dongcoh",
         "Western Digital",
@@ -53,7 +55,9 @@ void DataModel::run()
         3.0f,
         610352,
         true
-    });
+    };
+    usb_devices.push_back(drive2);
+    
 
     print_all_devices(usb_devices);
 
