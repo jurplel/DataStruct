@@ -22,35 +22,55 @@ public:
     int get_size_in_megabytes() const { return size_in_megabytes; };
     bool get_is_flash_based() const { return is_flash_based; };
 
-private:
-    std::string name;
-    std::string manufacturer;
-    std::string chipset;
-    char connector_type; // a b or c
-    float usb_version; // 2.0, 3.0, 3.1, 3.12, etc
+    inline bool operator<(const UsbDevice &dev) const {
+        return get_size_in_megabytes() < dev.get_size_in_megabytes();
+    }
 
-    int size_in_megabytes;
-    bool is_flash_based;
+    inline bool operator>(const UsbDevice &dev) const {
+        return get_size_in_megabytes() > dev.get_size_in_megabytes();
+    }
+
+    inline bool operator<=(const UsbDevice &dev) const {
+        return get_size_in_megabytes() <= dev.get_size_in_megabytes();
+    }
+
+    inline bool operator>=(const UsbDevice &dev) const {
+        return get_size_in_megabytes() >= dev.get_size_in_megabytes();
+    }
+
+private:
+    std::string name = "";
+    std::string manufacturer = "";
+    std::string chipset = "";
+    char connector_type = 'e'; // a b or c
+    float usb_version = 0.0f; // 2.0, 3.0, 3.1, 3.12, etc
+
+    int size_in_megabytes = 0;
+    bool is_flash_based = false;
 };
 
-inline std::ostream& operator<<(std::ostream &o, const UsbDevice dev)
-{
+inline std::ostream& operator<<(std::ostream &os, const UsbDevice &dev) {
     std::string flashString;
     if (dev.get_is_flash_based())
         flashString = "Flash Memory";
 
-    return o << "Name: " << dev.get_manufacturer() << ' ' << dev.get_name() << std::endl
-            << "Connector: " << dev.get_connector_type() << ' ' << std::to_string(dev.get_usb_version()) << std::endl
+    return os << "Name: " << dev.get_manufacturer() << ' ' << dev.get_name() << std::endl
+            << "Interface: " << dev.get_connector_type() << ' ' << std::to_string(dev.get_usb_version()) << std::endl
             << "Chipset: " << dev.get_chipset() << std::endl
             << std::to_string(dev.get_size_in_megabytes()) << " MB " << flashString;
 }
+
 
 class DataModel : Project 
 {
 public:
     explicit DataModel();
 
-    void sort_usb_devices(std::vector<UsbDevice> &dev_list);
+    void sort_usb_devices_std(std::vector<UsbDevice> &dev_list);
+    void sort_usb_devices_bubble(std::vector<UsbDevice> &dev_list);
+    void sort_usb_devices_quick(std::vector<UsbDevice> &dev_list, int start, int end);
+    void sort_usb_devices_quick(std::vector<UsbDevice> &dev_list);
+    void sort_usb_devices_merge(std::vector<UsbDevice> &dev_list);
     void run() override;
 
 private:
