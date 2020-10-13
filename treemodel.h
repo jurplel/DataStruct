@@ -12,8 +12,8 @@ public:
 
     std::string get_key() const { return key; };
     unsigned __int128 get_val() const { return val; }
-    Node *get_child0() const { return child0; }
-    Node *get_child1() const { return child1; }
+    Node *&get_child0() { return child0; }
+    Node *&get_child1() { return child1; }
 
 private:
     Node *parent;

@@ -10,13 +10,12 @@ TreeModel::TreeModel()
    root_node = nullptr; 
 }
 
-static std::pair<Node*, Node*> find_place_for_value(const unsigned __int128 &val, Node *candidate_node)
+static std::pair<Node*&, Node*> find_place_for_value(const unsigned __int128 &val, Node *candidate_node)
 {
-    Node *place;
+    Node *&place = candidate_node->get_child0();
+
     if (val > candidate_node->get_val())
         place = candidate_node->get_child1();
-    else
-        place = candidate_node->get_child0();
 
     if (!place)
         return {place, candidate_node};
@@ -43,13 +42,13 @@ static void print_recursive_child_nodes(Node *node, int indentation = 0)
     for (int i = 0; i < indentation; i++)
         std::cout << '\t';
     
-    std::cout << node->get_key() << ' ' << std::endl;
+    std::cout << node->get_key() << std::endl;
+
+//    if (node->get_child0())
+//        print_recursive_child_nodes(node->get_child0(), indentation + 1);
     
-    if (node->get_child0())
-        print_recursive_child_nodes(node->get_child0(), indentation + 1);
-    
-    if (node->get_child1())
-        print_recursive_child_nodes(node->get_child1(), indentation + 1);
+//    if (node->get_child1())
+//        print_recursive_child_nodes(node->get_child1(), indentation + 1);
 }
 
 void TreeModel::run()
@@ -61,6 +60,7 @@ void TreeModel::run()
     int random_index = distribution(generator);
     std::cout << "root index " << random_index << std::endl;
 
-    populate_nodes(random_index);
+    //populate_nodes(random_index);
+    populate_nodes(15);
     print_recursive_child_nodes(root_node);
 }
