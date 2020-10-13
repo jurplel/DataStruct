@@ -10,17 +10,22 @@ TreeModel::TreeModel()
    root_node = nullptr; 
 }
 
+static Node*& child0_or_child1(const unsigned __int128 &val, Node *candidate_node)
+{
+    if (val > candidate_node->get_val())
+        return candidate_node->get_child1();
+    else
+        return candidate_node->get_child0();
+}
+
 static std::pair<Node*&, Node*> find_place_for_value(const unsigned __int128 &val, Node *candidate_node)
 {
-    Node *&place = candidate_node->get_child0();
+    Node *&child = child0_or_child1(val, candidate_node);
 
-    if (val > candidate_node->get_val())
-        place = candidate_node->get_child1();
+    if (!child)
+        return {child, candidate_node};
 
-    if (!place)
-        return {place, candidate_node};
-
-    return find_place_for_value(val, place);
+    return find_place_for_value(val, child);
 }
 
 void TreeModel::populate_nodes(int root_index)
@@ -37,18 +42,24 @@ void TreeModel::populate_nodes(int root_index)
     }
 }
 
-static void print_recursive_child_nodes(Node *node, int indentation = 0)
+static void print_recursive_child_nodes(Node *node, int indentation = 0, bool is_child0 = false)
 {
     for (int i = 0; i < indentation; i++)
-        std::cout << '\t';
-    
+        std::cout << "    ";
+   
+    std::cout << (is_child0 ? "├──" : "└──");
+
     std::cout << node->get_key() << std::endl;
 
-//    if (node->get_child0())
-//        print_recursive_child_nodes(node->get_child0(), indentation + 1);
-    
-//    if (node->get_child1())
-//        print_recursive_child_nodes(node->get_child1(), indentation + 1);
+    if (node->get_child0())
+    {
+        print_recursive_child_nodes(node->get_child0(), indentation + 1, true);
+    }
+
+    if (node->get_child1())
+    {
+        print_recursive_child_nodes(node->get_child1(), indentation + 1);
+    }
 }
 
 void TreeModel::run()
@@ -60,7 +71,7 @@ void TreeModel::run()
     int random_index = distribution(generator);
     std::cout << "root index " << random_index << std::endl;
 
-    //populate_nodes(random_index);
-    populate_nodes(15);
+    populate_nodes(random_index);
+
     print_recursive_child_nodes(root_node);
 }
