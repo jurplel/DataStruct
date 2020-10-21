@@ -132,6 +132,7 @@ void DataModel::run()
         58704,
         true
     );
+
     UsbDevice drive1(
         "",
         "Micro Center",
@@ -141,6 +142,7 @@ void DataModel::run()
         15112,
         true
     );
+
     UsbDevice drive2(
         "",
         "Dongcoh",
@@ -162,6 +164,7 @@ void DataModel::run()
         122070,
         true
     );
+
     UsbDevice drive4(
         "Attaché 3",
         "PNY",
@@ -171,6 +174,7 @@ void DataModel::run()
         61035,
         true
     );
+
     for (int i = 0; i < 500; i++)
     {
         usb_devices.push_back(drive0);

@@ -4,6 +4,7 @@
 #include <random>
 
 //To-do: destructors for pointers
+//To-do: print __int128 :(
 
 TreeModel::TreeModel()
 {
@@ -28,6 +29,59 @@ static std::pair<Node*&, Node*> find_place_for_value(const unsigned __int128 &va
     return find_place_for_value(val, child);
 }
 
+void TreeModel::delete_node(Node *node)
+{
+    if (!node)
+        return;
+
+    Node *new_node = nullptr;
+    Node *sort_me_later = nullptr;
+
+    if (node->get_child0() && node->get_child1())
+    {
+         new_node = node->get_child1();
+         sort_me_later = node->get_child0();
+         node->get_child0() = nullptr;
+    }
+    else if (node->get_child0() && !node->get_child1())
+    {
+        new_node = node->get_child0();
+    }
+    else if (node->get_child1() && !node->get_child0())
+    {
+        new_node = node->get_child1();
+    }
+
+    if (root_node == node)
+    {
+        root_node = new_node;
+    }
+    else if (node->get_parent()->get_child0() == node)
+    {
+        node->get_parent()->get_child0() = new_node;
+    }
+    else if (node->get_parent()->get_child1() == node)
+    {
+        node->get_parent()->get_child1() = new_node;
+    }
+
+    delete node;
+
+    if (sort_me_later)
+       insert_node(sort_me_later);
+}
+
+
+void TreeModel::insert_node(Node *node)
+{
+    if (!node)
+        return;
+
+    auto [new_pos, new_parent] = find_place_for_value(node->get_val(), root_node);
+    node->get_parent() = new_parent;
+    new_pos = node;
+}
+
 void TreeModel::populate_nodes(int root_index)
 {
     root_node = new Node(PLANET_INFO[root_index].first, PLANET_INFO[root_index].second, nullptr);
@@ -37,8 +91,8 @@ void TreeModel::populate_nodes(int root_index)
         if (i == root_index)
             continue;
 
-        auto [new_pos, new_parent] = find_place_for_value(PLANET_INFO[i].second, root_node);
-        new_pos = new Node(PLANET_INFO[i].first, PLANET_INFO[i].second, new_parent);
+        auto *new_node = new Node(PLANET_INFO[i].first, PLANET_INFO[i].second);
+        insert_node(new_node);
     }
 }
 
@@ -71,7 +125,9 @@ void TreeModel::run()
     int random_index = distribution(generator);
     std::cout << "root index " << random_index << std::endl;
 
-    populate_nodes(random_index);
+    populate_nodes(0);
+
+    delete_node(root_node);
 
     print_recursive_child_nodes(root_node);
 }

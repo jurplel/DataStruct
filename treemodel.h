@@ -12,6 +12,7 @@ public:
 
     std::string get_key() const { return key; };
     unsigned __int128 get_val() const { return val; }
+    Node *&get_parent() { return parent; }
     Node *&get_child0() { return child0; }
     Node *&get_child1() { return child1; }
 
@@ -28,6 +29,10 @@ class TreeModel : Project
 {
 public:
     explicit TreeModel();
+
+    void delete_node(Node *node);
+
+    void insert_node(Node *node);
 
     void populate_nodes(int root_index);
 
