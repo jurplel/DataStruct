@@ -1,9 +1,10 @@
-#include <iostream>
-
 #include "project.h"
 #include "teamoptimizer.h"
 #include "datamodel.h"
 #include "treemodel.h"
+#include "searchtree.h"
+
+#include <iostream>
 
 void display_main_menu()
 {
@@ -19,7 +20,7 @@ void display_main_menu()
     bool exit = false;
     while (!exit)
     {
-        char input_char = Project::wait_for_valid_char(message, accepted_values);
+        char input_char = wait_for_valid_char(message, accepted_values);
         switch (input_char) {
             case '1': {
                 TeamOptimizer team_optimizer;
@@ -37,7 +38,8 @@ void display_main_menu()
                 break;
             }
             case '4': {
-
+                SearchTree search_tree;
+                search_tree.run();
                 break;
             }
             case 'e': {
