@@ -54,7 +54,7 @@ public:
 
     SearchTreeNode &choose_optimal_node();
     Direction choose_optimal_dir();
-    static std::optional<float> calculate_effective_time(SearchTreeNode *node, Direction dir);
+    static std::optional<float> calculate_effective_time(SearchTreeNode &node, Direction dir);
 
     const DataRetrievalState &get_retrieval_state() const { return retrieval_state; }
     const Planet &get_current_planet() const { return current_planet; }
@@ -72,9 +72,9 @@ private:
     std::optional<float> retrieval_time;
 
     bool children_initialized;
-    SearchTreeNode *child_backward;
-    SearchTreeNode *child_orbit_or_retrieve;
-    SearchTreeNode *child_forward;
+    std::unique_ptr<SearchTreeNode> child_backward;
+    std::unique_ptr<SearchTreeNode> child_orbit_or_retrieve;
+    std::unique_ptr<SearchTreeNode> child_forward;
     DataRetrievalState retrieval_state;
 };
 
