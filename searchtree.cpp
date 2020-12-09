@@ -3,9 +3,15 @@
 #include <random>
 #include <algorithm>
 
-SearchTreeNode::SearchTreeNode(const UniverseState &state) : state(state), current_planet(state.planet_list.at(state.current_planet))
+SearchTreeNode::SearchTreeNode(const UniverseState state) :  current_planet(state.planet_list.at(state.planet_index)), state(state)
 {
-    planet_index = state.current_planet;
+    children_initialized = false;
+    child_backward = nullptr;
+    child_orbit_or_retrieve = nullptr;
+    child_forward = nullptr;
+
+    planet_index = state.planet_index;
+    std::cout << "Planet index on construction: " << state.planet_index << std::endl;
 
     // Set travel time backward
     travel_time_backward = current_planet.distance_from_previous;
@@ -23,52 +29,94 @@ SearchTreeNode::SearchTreeNode(const UniverseState &state) : state(state), curre
     else
         retrieval_state = DataRetrievalState::None;
 
+    std::cout << "Retrieval state on construction: " << static_cast<int>(retrieval_state) << std::endl;
+
     // Set retrieval time if we are in a state which we know it
     if (retrieval_state == DataRetrievalState::Orbited || retrieval_state == DataRetrievalState::Retrieved)
     {
         retrieval_time = current_planet.retrieve_time;
     }
+}
 
+void SearchTreeNode::init_children()
+{
     // Build tree
     // Travel backward
     if (travel_time_backward.has_value())
     {
-        UniverseState backState = state;
-        backState.current_planet--;
-        backState.time_taken += travel_time_backward.value();
-        child_backward.reset(new SearchTreeNode(backState));
+        UniverseState back_state = state;
+        back_state.planet_index--;
+        back_state.time_taken += travel_time_backward.value();
+        SearchTreeNode *ptr = new SearchTreeNode(back_state);
+        child_backward = ptr;
     }
 
     // Orbit or data retrieval
     if (retrieval_state == DataRetrievalState::None)
     {
-        UniverseState orbitState = state;
-        orbitState.time_taken += orbit_time;
-        orbitState.data_retrieval_states.insert({planet_index, DataRetrievalState::Orbited});
-        child_orbit_or_retrieve.reset(new SearchTreeNode(orbitState));
+        UniverseState orbit_state = state;
+        orbit_state.time_taken += orbit_time;
+        orbit_state.data_retrieval_states.insert_or_assign(planet_index, DataRetrievalState::Orbited);
+        SearchTreeNode *ptr = new SearchTreeNode(orbit_state);
+        child_orbit_or_retrieve = ptr;
     }
     else if (retrieval_state == DataRetrievalState::Orbited)
     {
-        UniverseState retrieveState = state;
-        retrieveState.time_taken += retrieval_time.value();
-        retrieveState.data_retrieval_states.insert({planet_index, DataRetrievalState::Retrieved});
-        child_orbit_or_retrieve.reset(new SearchTreeNode(retrieveState));
+        UniverseState retrieve_state = state;
+        retrieve_state.time_taken += retrieval_time.value();
+        retrieve_state.data_retrieval_states.insert_or_assign(planet_index, DataRetrievalState::Retrieved);
+        SearchTreeNode *ptr = new SearchTreeNode(retrieve_state);
+        child_orbit_or_retrieve = ptr;
     }
 
     // Travel forward
     if (travel_time_forward.has_value())
     {
-        UniverseState forwardState = state;
-        forwardState.current_planet++;
-        forwardState.time_taken += travel_time_forward.value();
-        child_forward.reset(new SearchTreeNode(forwardState));
+        UniverseState forward_state = state;
+        forward_state.planet_index++;
+        forward_state.time_taken += travel_time_forward.value();
+        SearchTreeNode *ptr = new SearchTreeNode(forward_state);
+        child_forward = ptr;
     }
+
+    children_initialized = true;
 }
 
-Direction SearchTreeNode::choose_optimal_node()
+SearchTreeNode &SearchTreeNode::choose_optimal_node()
+{
+    if (!get_children_initialized())
+        init_children();
+
+    Direction optimal_dir = choose_optimal_dir();
+    switch (optimal_dir)
+    {
+    case Direction::Backward: {
+        std::cout << "Choosing backward";
+        if (child_backward)
+            return *child_backward;
+        break;
+    }
+    case Direction::None: {
+        std::cout << "Choosing none (orbit/retrieve)" << std::endl;
+        if (child_orbit_or_retrieve)
+            return *child_orbit_or_retrieve;
+        break;
+    }
+    case Direction::Forward: {
+        std::cout << "Choosing forward";
+        if (child_forward)
+            return *child_forward;
+        break;
+    }
+    }
+
+    throw std::runtime_error("reached the end of the function without doing anything!!!!");
+}
+
+Direction SearchTreeNode::choose_optimal_dir()
 {
     std::optional<float> total_cost_backward = travel_time_backward;
-    std::optional<float> total_cost_current;
+    std::optional<float> total_cost_current = 0;
     std::optional<float> total_cost_forward = travel_time_forward;
 
     if (total_cost_backward.has_value())
@@ -76,16 +124,13 @@ Direction SearchTreeNode::choose_optimal_node()
         total_cost_backward.value() += calculate_effective_time(child_backward, Direction::Backward).value();
     }
 
-    if (total_cost_current.has_value())
+    if (auto result = calculate_effective_time(this, Direction::None); result.has_value())
     {
-        if (auto result = calculate_effective_time(std::unique_ptr<SearchTreeNode>(this), Direction::None); result.has_value())
-        {
-            total_cost_current.value() += result.value();
-        }
-        else
-        {
-            total_cost_current.reset();
-        }
+        total_cost_current.value() += result.value();
+    }
+    else
+    {
+        total_cost_current.reset();
     }
 
     if (total_cost_forward.has_value())
@@ -93,7 +138,13 @@ Direction SearchTreeNode::choose_optimal_node()
         total_cost_forward.value() += calculate_effective_time(child_forward, Direction::Forward).value();
     }
 
+    std::cout << "total time costs:" << std::endl;
+    std::cout << total_cost_backward.value_or(-1) << std::endl;
+    std::cout << total_cost_current.value_or(-1) << std::endl;
+    std::cout << total_cost_forward.value_or(-1) << std::endl;
+
     std::optional<float> min = std::min({total_cost_backward, total_cost_current, total_cost_forward});
+    std::cout << "Min: " << min.value_or(-1) << std::endl;
 
     if (total_cost_backward == min)
     {
@@ -105,10 +156,9 @@ Direction SearchTreeNode::choose_optimal_node()
     }
 
     return Direction::None;
-
 }
 
-std::optional<float> SearchTreeNode::calculate_effective_time(const std::unique_ptr<SearchTreeNode> &node, Direction dir)
+std::optional<float> SearchTreeNode::calculate_effective_time(SearchTreeNode *node, Direction dir)
 {
     const float RETRIEVAL_TIME_GUESS = 50.0f;
     float total_cost = 0;
@@ -152,30 +202,52 @@ SearchTree::SearchTree()
 
 void SearchTree::run()
 {
-    find_suitable_planet();
+    bool success = find_suitable_planet();
 }
 
-std::optional<int> SearchTree::find_suitable_planet()
+bool SearchTree::find_suitable_planet()
 {
     UniverseState initial_state(planet_list, initial_planet);
     SearchTreeNode root_node(initial_state);
-    return one_level_deeper(root_node);
+    std::optional<int> suitable_planet_index = one_level_deeper(root_node);
 
-
-
-    return std::optional<int>();
+    if (suitable_planet_index.has_value())
+    {
+        std::cout << "Found suitable planet: " << suitable_planet_index.value();
+        return true;
+    }
+    else
+    {
+        std::cout << "Failed to find suitable planet";
+        return false;
+    }
 }
 
 std::optional<int> SearchTree::one_level_deeper(SearchTreeNode &node)
 {
-    is_goal_state(node);
+    if (!node.get_children_initialized())
+        node.init_children();
 
-    Direction best_dir = node.choose_optimal_node();
+    if (is_goal_state(node))
+        return node.get_planet_index();
+
+
+    std::cout << "One level deeper " << std::endl;
+    std::cout << "---" << std::endl;
+    SearchTreeNode &optimal_node = node.choose_optimal_node();
+
+    return one_level_deeper(optimal_node);
 }
 
 bool SearchTree::is_goal_state(const SearchTreeNode &node)
 {
-//    if (node.retrieval_state)
+    if (node.get_retrieval_state() == DataRetrievalState::Retrieved)
+    {
+        const Planet &current_planet = node.get_current_planet();
+        return true;
+    }
+
+    return false;
 }
 
 void SearchTree::generate_universe()

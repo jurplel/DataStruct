@@ -37,42 +37,44 @@ enum class Direction
 class UniverseState
 {
 public:
-    explicit UniverseState(const std::vector<Planet> &planet_list, int current_planet) : planet_list(planet_list), current_planet(current_planet) {};
+    explicit UniverseState(const std::vector<Planet> &planet_list, int index) : planet_list(planet_list), planet_index(index) {};
     // In our one-dimensional universe, travel will only be possible (or optimal, at least) between adjacent planets.
     const std::vector<Planet> &planet_list;
-    int current_planet;
+    int planet_index;
     std::unordered_map<int, DataRetrievalState> data_retrieval_states;
     float time_taken;
-};
-
-enum class Action
-{
-    Travel,
-    Orbit,
-    Data
 };
 
 class SearchTreeNode
 {
 public:
-    explicit SearchTreeNode(const UniverseState &state);
+    explicit SearchTreeNode(const UniverseState state);
 
-    Direction choose_optimal_node();
-    static std::optional<float> calculate_effective_time(const std::unique_ptr<SearchTreeNode> &node, Direction dir);
+    void init_children();
+
+    SearchTreeNode &choose_optimal_node();
+    Direction choose_optimal_dir();
+    static std::optional<float> calculate_effective_time(SearchTreeNode *node, Direction dir);
+
+    const DataRetrievalState &get_retrieval_state() const { return retrieval_state; }
+    const Planet &get_current_planet() const { return current_planet; }
+    const int &get_planet_index() const { return planet_index; }
+    const bool &get_children_initialized() const { return children_initialized; }
 
 private:
     int planet_index;
     const Planet &current_planet;
-    const UniverseState &state;
+    const UniverseState state;
     // time will be measured in hours for this scenario
     std::optional<float> travel_time_backward;
     std::optional<float> travel_time_forward;
     float orbit_time;
     std::optional<float> retrieval_time;
 
-    std::unique_ptr<SearchTreeNode> child_backward;
-    std::unique_ptr<SearchTreeNode> child_orbit_or_retrieve;
-    std::unique_ptr<SearchTreeNode> child_forward;
+    bool children_initialized;
+    SearchTreeNode *child_backward;
+    SearchTreeNode *child_orbit_or_retrieve;
+    SearchTreeNode *child_forward;
     DataRetrievalState retrieval_state;
 };
 
@@ -82,7 +84,7 @@ public:
     explicit SearchTree();
     void run() override;
 
-    std::optional<int> find_suitable_planet();
+    bool find_suitable_planet();
     std::optional<int> one_level_deeper(SearchTreeNode &node);
     static bool is_goal_state(const SearchTreeNode &node);
 
@@ -90,8 +92,10 @@ protected:
     void generate_universe();
 
 private:
-    const int PLANET_MIN_COUNT = 500;
-    const int PLANET_MAX_COUNT = 3500;
+//    const int PLANET_MIN_COUNT = 500;
+//    const int PLANET_MAX_COUNT = 3500;
+        const int PLANET_MIN_COUNT = 10;
+        const int PLANET_MAX_COUNT = 30;
     // temps in K
     const float PLANET_MIN_TEMP = 5.0f;
     const float PLANET_MAX_TEMP = 1500.0f;
