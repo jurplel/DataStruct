@@ -61,6 +61,11 @@ public:
     const int &get_planet_index() const { return planet_index; }
     const bool &get_children_initialized() const { return children_initialized; }
 
+    const std::unique_ptr<SearchTreeNode> &get_child_backward() const { return child_backward; }
+    const std::unique_ptr<SearchTreeNode> &get_child_orbit_or_retrieve() const { return child_orbit_or_retrieve; }
+    const std::unique_ptr<SearchTreeNode> &get_child_forward() const { return child_forward; }
+
+
 private:
     int planet_index;
     const Planet &current_planet;

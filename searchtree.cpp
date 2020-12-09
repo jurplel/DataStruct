@@ -29,7 +29,8 @@ SearchTreeNode::SearchTreeNode(const UniverseState state) :  current_planet(stat
     else
         retrieval_state = DataRetrievalState::None;
 
-    std::cout << "Retrieval state on construction: " << static_cast<int>(retrieval_state) << std::endl;
+    std::cout << "Construction: RS:" << static_cast<int>(retrieval_state)
+              << " i:" << planet_index << std::endl;
 
     // Set retrieval time if we are in a state which we know it
     if (retrieval_state == DataRetrievalState::Orbited || retrieval_state == DataRetrievalState::Retrieved)
@@ -91,7 +92,7 @@ SearchTreeNode &SearchTreeNode::choose_optimal_node()
     switch (optimal_dir)
     {
     case Direction::Backward: {
-        std::cout << "Choosing backward";
+        std::cout << "Choosing backward" << std::endl;
         if (child_backward)
             return *child_backward;
         break;
@@ -103,7 +104,7 @@ SearchTreeNode &SearchTreeNode::choose_optimal_node()
         break;
     }
     case Direction::Forward: {
-        std::cout << "Choosing forward";
+        std::cout << "Choosing forward" << std::endl;
         if (child_forward)
             return *child_forward;
         break;
@@ -180,18 +181,24 @@ std::optional<float> SearchTreeNode::calculate_effective_time(SearchTreeNode &no
     case DataRetrievalState::Retrieved: {
         if (dir == Direction::Backward)
         {
-            if (!node.child_backward)
+            if (!node.children_initialized)
+                node.init_children();
+
+            if (!node.get_child_backward())
                 throw std::runtime_error("backward node ptr is not defined!");
 
-            auto val = calculate_effective_time(*node.child_backward, dir);
+            auto val = calculate_effective_time(*node.get_child_backward(), dir);
             total_cost += val.value_or(0);
         }
         else if (dir == Direction::Forward)
         {
-            if (!node.child_forward)
+            if (!node.children_initialized)
+                node.init_children();
+
+            if (!node.get_child_forward())
                 throw std::runtime_error("forward node ptr is not defined!");
 
-            auto val = calculate_effective_time(*node.child_forward, dir);
+            auto val = calculate_effective_time(*node.get_child_forward(), dir);
             total_cost += val.value_or(0);
         }
         else
@@ -254,6 +261,23 @@ bool SearchTree::is_goal_state(const SearchTreeNode &node)
     if (node.get_retrieval_state() == DataRetrievalState::Retrieved)
     {
         const Planet &current_planet = node.get_current_planet();
+        std::cout << current_planet.avg_surface_temp << "deg K " << std::endl
+                  << "terrain: " << current_planet.has_terrain << " "
+                  << "water: " << current_planet.has_water << std::endl
+                  << "o2: " << current_planet.oxygen_percentage << "%" << std::endl;
+
+        if (!(current_planet.avg_surface_temp > 238 && current_planet.avg_surface_temp < 328 ))
+            return false;
+
+        if (!current_planet.has_terrain)
+            return false;
+
+        if (!current_planet.has_water)
+            return false;
+
+        if (!(current_planet.oxygen_percentage > 20))
+            return false;
+
         return true;
     }
 
@@ -274,7 +298,7 @@ void SearchTree::generate_universe()
     std::uniform_real_distribution<float> dist_dist(PLANET_MIN_TEMP, PLANET_MAX_TEMP); // just let me have this
     std::uniform_real_distribution<float> time_dist(PLANET_MIN_RETRIEVAL_TIME, PLANET_MAX_RETRIEVAL_TIME);
     std::uniform_real_distribution<float> temp_dist(PLANET_MIN_TEMP, PLANET_MAX_TEMP);
-    std::uniform_real_distribution<float> percent_dist(0, 100);
+    std::uniform_real_distribution<float> percent_dist(0, 50);
     std::uniform_int_distribution<int> bool_dist(0, 1);
 
 
