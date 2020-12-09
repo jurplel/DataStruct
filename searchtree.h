@@ -52,9 +52,12 @@ public:
 
     void init_children();
 
-    SearchTreeNode &choose_optimal_node();
+    std::unique_ptr<SearchTreeNode> &choose_optimal_node();
     Direction choose_optimal_dir();
     static std::optional<float> calculate_effective_time(SearchTreeNode &node, Direction dir);
+
+    const std::optional<float> &get_travel_time_backward() const { return travel_time_backward; }
+    const std::optional<float> &get_travel_time_forward() const { return travel_time_forward; }
 
     const DataRetrievalState &get_retrieval_state() const { return retrieval_state; }
     const Planet &get_current_planet() const { return current_planet; }
