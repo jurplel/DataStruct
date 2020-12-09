@@ -136,10 +136,10 @@ Direction SearchTreeNode::choose_optimal_dir()
             total_cost_forward.value() += result.value();
     }
 
-    std::cout << "total time costs:" << std::endl;
-    std::cout << total_cost_backward.value_or(-1) << std::endl;
-    std::cout << total_cost_current.value_or(-1) << std::endl;
-    std::cout << total_cost_forward.value_or(-1) << std::endl;
+    std::cout << "Effective cost of:" << std::endl;
+    std::cout << "Going backward: " << total_cost_backward.value_or(-1) << std::endl;
+    std::cout << "Orbit/Retrieve: " << total_cost_current.value_or(-1) << std::endl;
+    std::cout << "Going forward: " << total_cost_forward.value_or(-1) << std::endl;
 
 
     // Use value_or with the maximum float value so any undefined values dont get picked.
@@ -183,7 +183,7 @@ std::optional<float> SearchTreeNode::calculate_effective_time(SearchTreeNode &no
 
             if (!node.get_child_backward())
             {
-                std::cout << "backward node ptr is not defined!" << std::endl;
+                std::cerr << "backward node ptr is not defined (not fatal)" << std::endl;
                 return std::numeric_limits<float>::max();
             }
 
@@ -198,7 +198,7 @@ std::optional<float> SearchTreeNode::calculate_effective_time(SearchTreeNode &no
 
             if (!node.get_child_forward())
             {
-                std::cout << "forward node ptr is not defined!" << std::endl;
+                std::cerr << "forward node ptr is not defined (not fatal)" << std::endl;
                 return std::numeric_limits<float>::max();
             }
             auto val = calculate_effective_time(*node.get_child_forward(), dir);
@@ -256,7 +256,8 @@ std::optional<int> SearchTree::one_level_deeper(SearchTreeNode &node)
         return node.get_planet_index();
 
 
-    std::cout << "One level deeper " << node.get_planet_index() << std::endl;
+    std::cout << "---" << std::endl;
+    std::cout << "Currently on planet  #" << node.get_planet_index()+1 << std::endl;
     std::cout << "---" << std::endl;
     std::unique_ptr<SearchTreeNode> &optimal_node = node.choose_optimal_node();
 
@@ -271,7 +272,8 @@ bool SearchTree::is_goal_state(const SearchTreeNode &node)
     if (node.get_retrieval_state() == DataRetrievalState::Retrieved)
     {
         const Planet &current_planet = node.get_current_planet();
-        std::cout << current_planet.avg_surface_temp << "°K " << std::endl
+        std::cout << "Checking planet #" << node.get_planet_index()+1 << std::endl
+                  << current_planet.avg_surface_temp << "°K " << std::endl
                   << "terrain: " << current_planet.has_terrain << " "
                   << "water: " << current_planet.has_water << std::endl
                   << "o2: " << current_planet.oxygen_percentage << "%" << std::endl;
