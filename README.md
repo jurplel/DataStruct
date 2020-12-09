@@ -1,5 +1,5 @@
 # DataStruct
-This is a repository containing my assignemnts for CIT245 Data Structures
+This is a repository containing my assignments for CIT245 Data Structures
 
 ## Team Optimizer
 This is a tool that allows you to optimize a game development team based on years of experience and manual preferences.
