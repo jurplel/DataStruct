@@ -3,6 +3,7 @@
 #include <random>
 #include <algorithm>
 #include <limits>
+#include <chrono>
 
 SearchTreeNode::SearchTreeNode(const UniverseState state) :  current_planet(state.planet_list.at(state.planet_index)), state(state)
 {
@@ -28,9 +29,6 @@ SearchTreeNode::SearchTreeNode(const UniverseState state) :  current_planet(stat
         retrieval_state = state.data_retrieval_states.at(planet_index);
     else
         retrieval_state = DataRetrievalState::None;
-
-    std::cout << "Construction: RS:" << static_cast<int>(retrieval_state)
-              << " i:" << planet_index << std::endl;
 
     // Set retrieval time if we are in a state which we know it
     if (retrieval_state == DataRetrievalState::Orbited || retrieval_state == DataRetrievalState::Retrieved)
@@ -225,7 +223,10 @@ SearchTree::SearchTree()
 
 void SearchTree::run()
 {
-    bool success = find_suitable_planet();
+    unsigned long long bef = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    find_suitable_planet();
+    unsigned long long aft = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+    std::cout << "Finished " << aft-bef << " ms" << std::endl;
 }
 
 bool SearchTree::find_suitable_planet()
@@ -270,7 +271,7 @@ bool SearchTree::is_goal_state(const SearchTreeNode &node)
     if (node.get_retrieval_state() == DataRetrievalState::Retrieved)
     {
         const Planet &current_planet = node.get_current_planet();
-        std::cout << current_planet.avg_surface_temp << "deg K " << std::endl
+        std::cout << current_planet.avg_surface_temp << "°K " << std::endl
                   << "terrain: " << current_planet.has_terrain << " "
                   << "water: " << current_planet.has_water << std::endl
                   << "o2: " << current_planet.oxygen_percentage << "%" << std::endl;

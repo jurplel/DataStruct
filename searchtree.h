@@ -100,10 +100,8 @@ protected:
     void generate_universe();
 
 private:
-//    const int PLANET_MIN_COUNT = 500;
-//    const int PLANET_MAX_COUNT = 3500;
-        const int PLANET_MIN_COUNT = 10;
-        const int PLANET_MAX_COUNT = 30;
+    const int PLANET_MIN_COUNT = 500;
+    const int PLANET_MAX_COUNT = 3500;
     // temps in K
     const float PLANET_MIN_TEMP = 5.0f;
     const float PLANET_MAX_TEMP = 1500.0f;
